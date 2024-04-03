@@ -25,9 +25,9 @@ ISR(TIMER1_COMPA_vect)    // chamda quando OC1 gerar 'overflow interrupt'
 ISR(TIMER2_COMPA_vect)    // chamda quando OC2 gerar 'overflow interrupt'
 {
 	PORTC = led2;
-	led2 <<= 5;                   // move para o proximo LED
+	led2 <<= 1;                   // move para o proximo LED
 	if (!led2)                    // overflow: começa no bit 0 de novo
-	led2 = 5;
+	led2 = 1;
 }
 
 
@@ -45,15 +45,17 @@ int main(void)
 	TCCR1B = _BV(CS10) | _BV(CS11)  | _BV(WGM12); // prescaler=64, clear timer/counter e compareA match
 	OCR1A = ((F_CPU/2/64/TIMER_CLOCK) - 1 );
 	// habilita a saida de OC1 (Output Compare 1) para 'overflow interrupt'
-	TCCR2B = _BV(CS20) | _BV(CS21)  | _BV(WGM12); // prescaler=64, clear timer/counter e compareA match
-	OCR2A = ((F_CPU/2/64/TIMER_CLOCK) - 1 );
+	TCCR2B = _BV(CS22) | _BV(CS20) | _BV(CS21)  | _BV(WGM12); // prescaler=64, clear timer/counter e compareA match
+	OCR2A = ((F_CPU/2/1024/TIMER_CLOCK) - 1 );
 	
 	TIMSK1  = _BV(OCIE1A);
 	TIMSK2  = _BV(OCIE2A);
 	
 	led = 1;                     // estado inicial da variavel LED
 	led2 = 1;
+	
 	sei();                       // habilita as interrupções
+	
 	unsigned int i;
 	while(1==1) // loop Infinito
 	{
