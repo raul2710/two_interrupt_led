@@ -11,8 +11,10 @@
 #define TIMER_CLOCK       2     // frequencia do LED em 1Hz
 #define tbi(x,y) x ^= _BV(y) 
 
+
 static volatile uint8_t led;     // o termo 'volatile' é usado quando a
 static volatile uint8_t led2;    // variável é acessada em interrupções
+static volatile uint8_t count = 0;    // variável é acessada em interrupções
 
 ISR(TIMER1_COMPA_vect)    // chamda quando OC1 gerar 'overflow interrupt'
 {
@@ -24,12 +26,15 @@ ISR(TIMER1_COMPA_vect)    // chamda quando OC1 gerar 'overflow interrupt'
 
 ISR(TIMER2_COMPA_vect)    // chamda quando OC2 gerar 'overflow interrupt'
 {
-	PORTC = led2;
-	led2 <<= 1;                   // move para o proximo LED
-	if (!led2)                    // overflow: começa no bit 0 de novo
-	led2 = 1;
+	if (count == 8)                   // overflow: começa no bit 0 de novo
+		PORTC |= (1<<5);   // NIVEL LOGICO 1
+	else if ( count == 16 ) {
+		PORTC &= ~(1<<5);  // NIVEL LOGICO 0
+		count = 0;
+	}
+	
+	count++;
 }
-
 
 int main(void)
 {
@@ -41,18 +46,22 @@ int main(void)
 	  
 	DDRC  = 0xff;                // todos os pinos da porta B como OUTPUT
 	PORTC = 0x00;   
-	            // desliga todos os LEDs
+	// desliga todos os LEDs
+	
 	TCCR1B = _BV(CS10) | _BV(CS11)  | _BV(WGM12); // prescaler=64, clear timer/counter e compareA match
 	OCR1A = ((F_CPU/2/64/TIMER_CLOCK) - 1 );
 	// habilita a saida de OC1 (Output Compare 1) para 'overflow interrupt'
-	TCCR2B = _BV(CS22) | _BV(CS20) | _BV(CS21)  | _BV(WGM12); // prescaler=64, clear timer/counter e compareA match
-	OCR2A = ((F_CPU/2/1024/TIMER_CLOCK) - 1 );
+
+	TCCR2A = _BV(WGM21);
+	TCCR2B = _BV(CS22) | _BV(CS20) | _BV(CS21); // prescaler=64, clear timer/counter e compareA match
+	OCR2A = ((F_CPU/(2*1024*100)) - 1);//((F_CPU/2/1024/100) - 1 );// //
 	
 	TIMSK1  = _BV(OCIE1A);
 	TIMSK2  = _BV(OCIE2A);
 	
 	led = 1;                     // estado inicial da variavel LED
 	led2 = 1;
+	count = 0;
 	
 	sei();                       // habilita as interrupções
 	
