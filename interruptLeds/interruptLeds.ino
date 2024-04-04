@@ -19,7 +19,7 @@
 #define tbi(x,y) x ^= _BV(y) 
 
 static volatile uint8_t led;     	// o termo 'volatile' é usado quando a
-static volatile uint8_t count = 0;	// variável é acessada em interrupções
+static volatile uint8_t count;		// variável é acessada em interrupções
 
 ISR(TIMER1_COMPA_vect)   			// chamda quando OC1 gerar 'overflow interrupt'
 {
